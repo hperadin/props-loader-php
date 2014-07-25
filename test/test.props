@@ -1,0 +1,29 @@
+# Comment 1
+
+ # Not a comment 1
+
+     # Not a comment 2
+
+truth=beauty
+truth =beauty
+truth= beauty
+truth  \=  beauty
+
+potato:potato
+
+po\:tato :potato
+
+  ptoa\=equalssign to
+
+
+AVeryLarge multiline\
+property \
+not describing much\
+but spannign mulitple lines
+
+
+123123 # Not a comment - this is a property
+
+# Comment 2
+
+# Comment 3
