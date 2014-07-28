@@ -19,6 +19,5 @@ interface PropsLoaderInterface {
   public function toPath();
 
   public function __toString();
-  public function toString();
   public function toString($encoding);
 }
