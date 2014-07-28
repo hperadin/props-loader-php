@@ -76,7 +76,7 @@ class JavaPropertiesReader {
     && ctype_xdigit(substr($string, 2));
   }
 
-  private function escapeValue($val){
+  private function ignoreIgnoreableEscapes($val){
     $escapedValue="";
 
     for($index = 0 ; $index < strlen($val); $index ++){
@@ -96,43 +96,50 @@ class JavaPropertiesReader {
 
       $escapedValue.=$currentChar;
     }
+
     return $escapedValue;
   }
 
   /**
    * Expects a non-empty ltrimmed property line and parses the key.
+   *
+   * Reads the line until it encounters a non-escaped KEY_TERMINAL,
    */
-  private function readKeyAndStripIt(&$line){
+  private function readKey($line){
     $key="";
     $escaped = FALSE;
-    $index=0;
 
-    while($index !== strlen($line) && (!in_array($line[$index], $this->KEY_TERMINALS) || $escaped)){
+    for($index = 0; $index < strlen($line) && (!in_array($line[$index], $this->KEY_TERMINALS) || $escaped); $index ++){
       $escaped = FALSE;
       $currentChar = $line[$index];
       if($currentChar === self::ESCAPE){
         $escaped = TRUE;
-        $nextChar = ($index + 1) !== strlen($line) ? $line[$index + 1] : null;
-
-        $isASeparatorEscape = $nextChar !== null && ($nextChar === self::EQUALS_SEPARATOR || $nextChar === self::COLON_SEPARATOR);
-        $notAUnicodeEscape = !self::isUnicodeEscape(substr($line, $index, 6));
-        $notAnAllowedEscape = !in_array($currentChar.$line[$index + 1], $this->ALLOWED_ESCAPES);
-
-        if($isASeparatorEscape && $notAUnicodeEscape && $notAnAllowedEscape)
-        {
-          /* Ignore the ESCAPE character */
-          $index += 1;
-          continue;
-        }
       }
       $key .= $currentChar;
-      $index += 1;
     }
 
-    /* Now that we have the key, trim the line on the index: */
-    $line = ltrim(substr($line, $index), " =:");
-
     return $key;
+  }
+
+  /**
+   * Finds the first non-escaped KEY_TERMINAL, and splits the line there
+   * Returns an aray containing the raw key and value
+   */
+  function splitKeyValue($line){
+
+    $escaped = FALSE;
+    for($index = 0;
+      $index < strlen ( $line )
+        && (! in_array ( $line [$index], $this->KEY_TERMINALS ) || $escaped);
+      $index ++)
+    {
+      $escaped = $line [$index] === self::ESCAPE;
+    }
+
+    $keyRaw = substr($line, 0, $index);
+    $valueRaw = ltrim(substr($line, $index), ' :=');
+
+    return array($keyRaw, $valueRaw);
   }
 
   /**
@@ -161,11 +168,11 @@ class JavaPropertiesReader {
       /* Strip trailing newlines */
       $line = rtrim($line, "\r\n");
 
-      /* Now we may parse the line */
-      $key = $this->readKeyAndStripIt($line);
+      /* Now we may parse the line: */
+      $rawKV = $this->splitKeyValue($line);
 
-      /* After strip, all that's left should be the property value */
-      $value = $this->escapeValue($line);
+      $key = $this->ignoreIgnoreableEscapes($rawKV[0]);
+      $value = $this->ignoreIgnoreableEscapes($rawKV[1]);
 
       $properties[$key] = $value;
     }
@@ -174,6 +181,4 @@ class JavaPropertiesReader {
 
     return $properties;
   }
-
-
 }
