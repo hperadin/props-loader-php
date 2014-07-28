@@ -2,7 +2,7 @@
 
 // TODO: install and import monolog
 
-// TODO: Type hints wherever whenever
+// TODO: Type hints
 
 class PropsLoaderFactory {
 
@@ -11,6 +11,7 @@ class PropsLoaderFactory {
 
   public function __construct($logger){
     $this->logger = $logger;
+    $this->propsHome = $this->resolvePropsHome();
   }
 
   /** Initialises and returns a new PropsLoaderFactory */
@@ -26,9 +27,9 @@ class PropsLoaderFactory {
 
   private function resolveProperty($key){
     $value = ini_get($key);
+    $this->logger->trace("Resolving system property $key, $value");
     if($value === FALSE)
       throw new InvalidArgumentException("System property $key was undefined.");
-    $this->logger->trace("Resolved system property: $key: $value");
     return $value;
   }
 
@@ -45,14 +46,15 @@ class PropsLoaderFactory {
   /** Returns the PropsLoader for a given branch (?)*/ // TODO:
   public function loadBranch($projectName, $branch) {
     if($branch !== null){
-      $file_path = $projectName . "_" . resolveProperty($branch);
+      $file_path = $this->propsHome . $projectName . "_" . resolveProperty($branch.".branch");
     }else{
-      $file_path = $projectName;
+      $file_path = $this->propsHome . $projectName;
     }
 
     $this->logger.debug("Resolved path for _: $file_path");
     $propsResolver = new PropsLoaderImpl($this->logger, $this->propsHome, "$file_path_");
 
+    /* Eagerly try to resolve all dependencies, and fail early*/
     foreach($propsResolver->getProperties() as $key => $value){
       try{
         $resolvedProps = $propsResolver->resolve($key);
@@ -66,14 +68,19 @@ class PropsLoaderFactory {
     }
   }
 
+  /**
+   * Gets the user home path (Windows and Linux)
+   */
   private static function getUserHome(){
     $home = $_SERVER['HOME'];
     $homeDrive = $_SERVER['HOMEDRIVE'];
     $homePath = $_SERVER['HOMEDRIVE'];
 
     if(!empty($home)){
+      /* This should work on a Linux */
       return $home;
     }else if(!empty($homeDrive) && !empty($homePath)){
+      /* This should work on Windows */
       return $homeDrive.$homePath;
     }else{
       throw new Exception("Unable to retrieve the user home directory path.");

@@ -1,8 +1,8 @@
 # Comment 1
 
- # Not a comment 1
+ # This is a comment since we have no non-whitespaces before it
 
-     # Not a comment 2
+     ! Same as the above
 
 truth=beauty
 truth =beauty
@@ -13,7 +13,7 @@ potato:potato
 
 po\:tato :potato
 
-  ptoa\=equalssign to
+  ptoa\= to
 
 
 AVeryLarge multiline\
@@ -25,5 +25,7 @@ but spannign mulitple lines
 123123 # Not a comment - this is a property
 
 # Comment 2
+
+     good bad=ugly
 
 # Comment 3

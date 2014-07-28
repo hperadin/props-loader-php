@@ -3,14 +3,11 @@ use PropsLoaderInterface;
 // TODO: install and import monolog
 
 class PropsLoaderImpl implements PropsLoaderInterface {
-
   private $logger;
   private $propsHome;
   private $file_path;
 
   private $resolveMap;
-
-  private $sourceLock;
   private $source;
 
   private $propertiesArray;
@@ -18,28 +15,32 @@ class PropsLoaderImpl implements PropsLoaderInterface {
   public function __construct($logger, $propsHome, $file_path){
     $this->logger = $logger;
     $this->propsHome = $propsHome;
-    $this->file_path = $file_path;
+    $this->file_path = $this -> findSingleFile($file_path);
   }
 
   /** Resolves a PropsLoader implementation */
   public function resolve($key) {
-    if(!isset($resolveMap)){
-      $resolveMap = array();
+    try{
+      if(!isset($resolveMap)){
+        $resolveMap = array();
+      }
+
+      $cachedLoader = $resolveMap[$key];
+      if($cachedLoader) return $cachedLoader;
+
+      $base_dir = dirname($this->file_path);
+      $value = $this->get($key);
+
+      $resolvedFile = $value === "."
+        ? $this->findSingleFile($base_dir.$key)
+        : $this->findSingleFile($this->propsHome.$value."/".$key);
+
+      $newLoader = new PropsLoaderImpl($this->logger, $this->propsHome, $this->file_path);
+      $this->resolveMap[$key] = $newLoader;
+      return $newLoader;
+    }catch (Exception $ex){
+      throw new InvalidArgumentException("Could not resolve key $key!", 0, $ex);
     }
-
-    $cachedLoader = $resolveMap[$key];
-    if($cachedLoader) return $cachedLoader;
-
-    $base_dir = dirname($this->file_path);
-    $value = $this->get($key);
-
-    $resolvedFile = $value === "."
-      ? $this->findSingleFile($base_dir.$key)
-      : $this->findSingleFile($this->propsHome.$value."/".$key);
-
-    $newLoader = new PropsLoaderImpl($this->logger, $this->propsHome, $this->file_path);
-    $this->resolveMap[$key] = $newLoader;
-    return $newLoader;
   }
 
   /**
@@ -64,6 +65,10 @@ class PropsLoaderImpl implements PropsLoaderInterface {
 
   /** Gets the String value of a property */
   public function get($key){
+    if($key === null){
+      throw new InvalidArgumentException("Key cannot be null");
+    }
+
     if(isset($this->getProperties()[$key])){
       return $this->getProperties()[$key];
     }else{
@@ -82,12 +87,12 @@ class PropsLoaderImpl implements PropsLoaderInterface {
   }
 
   private function loadProperties(){
-    // TODO: load java properties file into $this->propertiesArray
-    $logger->trace("About to load $file_name");
-
-    $this->propertiesArray = (new JavaPropsReader($propsFile))->read();
-
-    // TODO: logger.debug("Loaded: {} ({} bytes)", file, source.length);
+    try{
+      $logger -> trace("Loading properties from $file_name...");
+      $this -> propertiesArray = (new JavaPropertiesReader($propsFile) ) -> read();
+    } catch (Exception $ex) {
+      throw new InvalidArgumentException("An error occured while parsing properties from $file_name", 0, $ex);
+    }
   }
 
   /** Returns the properties' associative array */
@@ -121,7 +126,6 @@ class PropsLoaderImpl implements PropsLoaderInterface {
 
     return mb_convert_encoding($imploded, $encoding);
   }
-
 
   private static function startsWith($prefix, $string){
     return substr($string, 0, count($prefix)) === $prefix;
