@@ -1,6 +1,6 @@
 <?php
 
-require_once 'Classes/PropsLoaderImpl.php';
+require_once 'Core/PropsLoaderImpl.php';
 
 use Monolog\Logger;
 
@@ -30,8 +30,9 @@ class PropsLoaderFactory {
   private function resolveProperty($key){
     $value = ini_get($key);
     $this->logger->info("Resolving system property $key, $value");
-    if($value === FALSE)
+    if($value === FALSE){
       throw new InvalidArgumentException("System property '$key' was undefined.");
+    }
     return $value;
   }
 
@@ -64,6 +65,18 @@ class PropsLoaderFactory {
     /* Eagerly try to resolve all dependencies, and fail early*/
     foreach($propsResolver->getProperties() as $key => $value){
       try{
+        $isResolver = PropsLoaderImpl::isResolver($value);
+        $this->logger->debug("Is resolver = $isResolver"); // TODO: change all levels that should be trace (currently they are info I think to debug)
+
+        if($isResolver === TRUE){
+          $resolvedProps = $propsResolver->loadResolver($key);
+          $this->logger->info("$key = ". $resolvedProps->toPath());
+        }else{
+          $loadedProps = $propsResolver->resolve($key);
+          $loadedProps->getProperties();
+          $this->logger->info("$key = ". $loadedProps->toPath());
+        }
+
         $resolvedProps = $propsResolver->resolve($key);
         $props = $resolvedProps->getProperties();
         $this->logger->info("$key = ".$resolvedProps->toPath());
@@ -71,7 +84,7 @@ class PropsLoaderFactory {
         throw new RuntimeException("Could not resolve key '$key' with value "
             .$propsResolver->get($key)." from ".$propsResolver->toPath(), 0, $ex);
       }
-
+      $this->resolverCache[$projectBranch] = $propsResolver;
       return $propsResolver;
     }
   }

@@ -1,15 +1,16 @@
 <?php
 
-require_once 'Interfaces/PropsLoaderInterface.php';
-require_once 'Classes/JavaPropertiesReader.php';
+require_once 'Api/PropsLoader.php';
+require_once 'Core/JavaPropertiesReader.php';
 
 use Monolog\Logger;
 
-class PropsLoaderImpl implements PropsLoaderInterface {
+class PropsLoaderImpl implements PropsLoader {
   private $logger;
   private $propsHome;
   private $file_path;
 
+  private $resolverMap;
   private $resolveMap;
 
   private $javaPropertiesReader;
@@ -21,6 +22,36 @@ class PropsLoaderImpl implements PropsLoaderInterface {
     $this->propsHome = $propsHome;
     $this->file_path = $this -> findSingleFile($file_path);
     $this->javaPropertiesReader = new JavaPropertiesReader($file_path);
+  }
+
+  const resolverPattern = "^(.*)[\\/]_(\\.\\w+)?$";
+  public static function isResolver($value) {
+    return preg_match(self::resolverPattern, $value) === 1;
+  }
+
+  public function loadResolver($key) {
+      try {
+        if (!isset($this->resolverMap)){
+          $this->resolverMap = array();
+        }
+
+        $cachedResolver = isset($this->resolverMap[$key]) ? $this->resolverMap[$key] : null;
+        if ($cachedResolver) return $cachedResolver;
+
+        $value = $this->get(key);
+        if (!isResolver($value)) {
+          throw new InvalidArgumentException(String.format(
+              "Could not load resolver for key '$key', value '$value' is not in underscore main config format!"));
+        }
+
+        $resolvedFile = $this->findSingleFile($this->propsHome .'/'. $value);
+
+        $newLoader = new PropsLoaderImpl($this->logger, $this->propsHome, resolvedFile);
+        $this->resolverMap[$key] = newLoader;
+        return newLoader;
+      } catch (Exception $e) {
+        throw new InvalidArgumentException(String.format("Could not resolve key '$key'!"), $e);
+      }
   }
 
   /** Resolves a PropsLoader implementation */
@@ -116,8 +147,13 @@ class PropsLoaderImpl implements PropsLoaderInterface {
     return $this->propertiesArray;
   }
 
-  /** Returns the path to the properties source file */
+  /** Returns the full path to the properties source file */
   public function toPath(){
+    return $this->file_path;
+  }
+
+  /** Same as toPath(), returns the full path to the properties source file */
+  public function toFile(){
     return $this->file_path;
   }
 
@@ -138,6 +174,28 @@ class PropsLoaderImpl implements PropsLoaderInterface {
 
   private static function startsWith($prefix, $string){
     return substr($string, 0, strlen($prefix)) === $prefix;
+  }
+
+  // Iterator implementation to appease the spirits
+
+  public function rewind(){
+    reset($this->propertiesArray);
+  }
+
+  public function current(){
+    current($this->propertiesArray);
+  }
+
+  public function next(){
+    next($this->propertiesArray);
+  }
+
+  public function key(){
+    key($this->propertiesArray);
+  }
+
+  public function valid(){
+    key($this->propertiesArray) !== null;
   }
 
 }

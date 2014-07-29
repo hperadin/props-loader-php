@@ -2,8 +2,8 @@
 
 require_once 'vendor/autoload.php';
 
-require_once 'Classes/PropsLoaderImpl.php';
-require_once 'Classes/PropsLoaderFactory.php';
+require_once 'Core/PropsLoaderImpl.php';
+require_once 'Core/PropsLoaderFactory.php';
 
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
