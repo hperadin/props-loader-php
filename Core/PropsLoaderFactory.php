@@ -9,6 +9,8 @@ class PropsLoaderFactory {
   private $logger;
   private $propsHome;
 
+  private $resolverCache=array();
+
   private function __construct(Monolog\Logger $logger){
     $this->logger = $logger;
     $this->propsHome = $this->resolvePropsHome();
@@ -33,17 +35,22 @@ class PropsLoaderFactory {
     return $value;
   }
 
-  /** Returns a no-branch(?) PropsLoader*/ //TODO:
+  /** Loads a PropsResolver by $projectName with null $branch */
   public function loadPure($projectName){
     return $this->loadBranch($projectName, null);
   }
 
-  /** Returns the PropsLoader for a given branch (?)*/ // TODO:
+  /** Loads a PropsResolver by $projectName and $branch */
   public function loadBranch($projectName, $branch='') {
-
-    /* XXX: See the Java source. This is to circumvent the fact
-     we cannot have multiple functions with the same name */
+    /* If the branch is omited, the $branchName is taken to be sam as $projectName
+     * This is to mirror the java code, where there is a difference
+     * between an omited and a null branch */
     if(!is_null($branch)) $branch = $projectName;
+
+    $projectBranch = $projectName.":".$branch;
+
+    $cachedResolver = isset($this->resolverCache[$projectBranch]) ? $this->resolverCache[$projectBranch] : null;
+    if($cachedResolver) return $cachedResolver;
 
     if($branch !== null){
       $file_path = $this->propsHome . $projectName . "_" . $this->resolveProperty($branch.".branch");
@@ -64,6 +71,7 @@ class PropsLoaderFactory {
         throw new RuntimeException("Could not resolve key '$key' with value "
             .$propsResolver->get($key)." from ".$propsResolver->toPath(), 0, $ex);
       }
+
       return $propsResolver;
     }
   }
