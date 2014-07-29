@@ -1,5 +1,8 @@
 <?php
-interface PropsLoader {
+
+require_once 'Api/PropsResolver.php';
+
+interface PropsLoader extends PropsResolver, Iterator {
 
   /** Resolves a PropsLoader implementation */
   public function resolve($key);
