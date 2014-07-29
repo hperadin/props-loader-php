@@ -1,7 +1,5 @@
 <?php
-interface PropsLoaderInterface {
-
-  /* TODO: Return types */
+interface PropsLoader {
 
   /** Resolves a PropsLoader implementation */
   public function resolve($key);
