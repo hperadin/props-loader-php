@@ -101,27 +101,6 @@ class JavaPropertiesReader {
   }
 
   /**
-   * Expects a non-empty ltrimmed property line and parses the key.
-   *
-   * Reads the line until it encounters a non-escaped KEY_TERMINAL,
-   */
-  private function readKey($line){
-    $key="";
-    $escaped = FALSE;
-
-    for($index = 0; $index < strlen($line) && (!in_array($line[$index], $this->KEY_TERMINALS) || $escaped); $index ++){
-      $escaped = FALSE;
-      $currentChar = $line[$index];
-      if($currentChar === self::ESCAPE){
-        $escaped = TRUE;
-      }
-      $key .= $currentChar;
-    }
-
-    return $key;
-  }
-
-  /**
    * Finds the first non-escaped KEY_TERMINAL, and splits the line there
    * Returns an aray containing the raw key and value
    */

@@ -8,13 +8,17 @@ require_once 'Core/PropsLoaderFactory.php';
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 
-$logger = new Logger("PropsLoaderPhpTestLogger");
-$logger->pushHandler(new StreamHandler(__DIR__.'/props_loader.log', Logger::DEBUG));
+function initLogger(){
+  $logger = new Logger("PropsLoaderPhpTestLogger");
+  $logger->pushHandler(new StreamHandler(__DIR__.'/props_loader.log', Logger::DEBUG));
 
-$projectName = "global";
+  return $logger;
+}
+
+$logger = initLogger();
 
 $propsLoaderFactory = PropsLoaderFactory::init($logger);
-$propsLoader = $propsLoaderFactory -> loadBranch($projectName);
+$propsLoader = $propsLoaderFactory -> loadPure("global");
 
 $props = $propsLoader->getProperties();
 

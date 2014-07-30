@@ -3,6 +3,8 @@
 require_once 'Api/PropsLoader.php';
 require_once 'Core/JavaPropertiesReader.php';
 
+require_once 'Util/utils.php';
+
 use Monolog\Logger;
 
 class PropsLoaderImpl implements PropsLoader {
@@ -24,7 +26,7 @@ class PropsLoaderImpl implements PropsLoader {
     $this->javaPropertiesReader = new JavaPropertiesReader($file_path);
   }
 
-  const resolverPattern = "^(.*)[\\/]_(\\.\\w+)?$";
+  const resolverPattern = "/^(.*)[\\/]_(\\.\\w+)?$/";
   public static function isResolver($value) {
     return preg_match(self::resolverPattern, $value) === 1;
   }
@@ -35,7 +37,9 @@ class PropsLoaderImpl implements PropsLoader {
           $this->resolverMap = array();
         }
 
-        $cachedResolver = isset($this->resolverMap[$key]) ? $this->resolverMap[$key] : null;
+        $cachedResolver = isset($this->resolverMap[$key])
+          ? $this->resolverMap[$key]
+          : null;
         if ($cachedResolver) return $cachedResolver;
 
         $value = $this->get(key);
@@ -61,7 +65,9 @@ class PropsLoaderImpl implements PropsLoader {
         $this->resolveMap = array();
       }
 
-      $cachedLoader = isset($this->resolveMap[$key]) ? $this->resolveMap[$key] : null;
+      $cachedLoader = isset($this->resolveMap[$key])
+        ? $this->resolveMap[$key]
+        : null;
       if($cachedLoader) return $cachedLoader;
 
       $base_dir = dirname($this->file_path);
@@ -92,7 +98,7 @@ class PropsLoaderImpl implements PropsLoader {
 
     $files = array();
     foreach (scandir($parent_dir) as $fileInDir){
-      if(self::startsWith($file_prefix, $fileInDir)){
+      if(startsWith($file_prefix, $fileInDir)){
         $files[]=$fileInDir;
       }
     }
@@ -132,7 +138,7 @@ class PropsLoaderImpl implements PropsLoader {
 
   private function loadProperties(){
     try{
-      $this-> logger -> info("Loading properties from". $this->file_path."...");
+      $this-> logger -> debug("About to load file: ". $this->file_path."...");
       $this -> propertiesArray = $this->javaPropertiesReader->read();
     } catch (Exception $ex) {
       throw new InvalidArgumentException("An error occured while parsing properties from '$file_name'", 0, $ex);
@@ -152,11 +158,6 @@ class PropsLoaderImpl implements PropsLoader {
     return $this->file_path;
   }
 
-  /** Same as toPath(), returns the full path to the properties source file */
-  public function toFile(){
-    return $this->file_path;
-  }
-
   public function __toString(){
     return self::toString();
   }
@@ -170,10 +171,6 @@ class PropsLoaderImpl implements PropsLoader {
     $imploded = implode("\n", $flattened);
 
     return mb_convert_encoding($imploded, $encoding);
-  }
-
-  private static function startsWith($prefix, $string){
-    return substr($string, 0, strlen($prefix)) === $prefix;
   }
 
   // Iterator implementation to appease the spirits
