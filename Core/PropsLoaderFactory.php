@@ -25,7 +25,7 @@ class PropsLoaderFactory {
   }
 
   private function resolvePropsHome() {
-    $userHome = self::getUserHome();
+    $userHome = getUserHome();
     return "$userHome/.props/";
   }
 
@@ -80,7 +80,7 @@ class PropsLoaderFactory {
         $isResolver = PropsLoaderImpl::isResolver($value);
         $this->logger->debug("Is resolver = $isResolver");
 
-        if($isResolver === TRUE){
+        if($isResolver){
           $resolvedProps = $propsResolver->loadResolver($key);
           $this->logger->info("$key = ". $resolvedProps->toPath());
         }else{
@@ -88,33 +88,12 @@ class PropsLoaderFactory {
           $loadedProps->getProperties();
           $this->logger->info("$key = ". $loadedProps->toPath());
         }
-
-        $resolvedProps = $propsResolver->resolve($key);
-        $props = $resolvedProps->getProperties();
-        $this->logger->info("$key = ".$resolvedProps->toPath());
       }catch(Exception $ex){
         throw new RuntimeException("Could not resolve key '$key' with value "
             .$propsResolver->get($key)." from ".$propsResolver->toPath(), 0, $ex);
       }
       $this->propertiesResolversCache[$projectBranch] = $propsResolver;
       return $propsResolver;
-    }
-  }
-
-  /**
-   * Gets the user home path (Windows and Linux)
-   */
-  private static function getUserHome(){
-    if(isset($_SERVER['HOME']) && !empty($_SERVER['HOME'])){
-      /* This should work on a Linux */
-      return $_SERVER['HOME'];
-    }else if(
-        isset($_SERVER['HOMEDRIVE']) && !empty($_SERVER['HOMEDRIVE'])
-        && isset($_SERVER['HOMEPATH']) && !empty($_SERVER['HOMEPATH'])){
-      /* This should work on Windows */
-      return $_SERVER['HOMEDRIVE'].$_SERVER['HOMEPATH'];
-    }else{
-      throw new Exception("Unable to retrieve the user home directory path.");
     }
   }
 }

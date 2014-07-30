@@ -42,19 +42,19 @@ class PropsLoaderImpl implements PropsLoader {
           : null;
         if ($cachedResolver) return $cachedResolver;
 
-        $value = $this->get(key);
-        if (!isResolver($value)) {
-          throw new InvalidArgumentException(String.format(
-              "Could not load resolver for key '$key', value '$value' is not in underscore main config format!"));
+        $value = $this->get($key);
+        if (!$this->isResolver($value)) {
+          throw new InvalidArgumentException(
+              "Could not load resolver for key '$key', value '$value' is not in underscore main config format!");
         }
 
         $resolvedFile = $this->findSingleFile($this->propsHome .'/'. $value);
 
-        $newLoader = new PropsLoaderImpl($this->logger, $this->propsHome, resolvedFile);
-        $this->resolverMap[$key] = newLoader;
-        return newLoader;
+        $newLoader = new PropsLoaderImpl($this->logger, $this->propsHome, $resolvedFile);
+        $this->resolverMap[$key] = $newLoader;
+        return $newLoader;
       } catch (Exception $e) {
-        throw new InvalidArgumentException(String.format("Could not resolve key '$key'!"), $e);
+        throw new InvalidArgumentException("Could not resolve key '$key'!", 0, $e);
       }
   }
 
@@ -159,7 +159,7 @@ class PropsLoaderImpl implements PropsLoader {
   }
 
   public function __toString(){
-    return self::toString();
+    return $this->toString();
   }
 
   public function toString($encoding = "ISO-8859-1"){
