@@ -13,6 +13,7 @@ use Monolog\Handler\StreamHandler;
 function initLogger(){
   $logger = new Logger("PropsLoaderPhpTestLogger");
   $logger->pushHandler(new StreamHandler(__DIR__.'/props_loader.log', Logger::DEBUG));
+//   $logger->pushHandler(new StreamHandler('php://stdout', Logger::DEBUG));
 
   return $logger;
 }
@@ -29,11 +30,13 @@ $propertiesHomeDir = getUserHome() . "/.props/";
 $projects = scandir($propertiesHomeDir);
 
 foreach ($projects as $project){
-    if($project === '.' || $project === '..' || $project === 'IPCalculator_SE_Private_Karl'
-        || $project === 'bsp-ds-api_SE_Private_Karl'
-        || $project === 'tmp')
-      continue;
-    print "\n";
-    print "Trying to load all properties for project: $project\n";
+  try {
+    print "======================================================\n";
+    print "Loadin properties for project: $project\n";
     $propsLoader = $propsLoaderFactory -> loadPure($project);
+    print "======================================================\n";
+  }catch(Exception $ex){
+    //just skip the project
+  }
+
 }

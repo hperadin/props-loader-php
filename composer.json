@@ -1,4 +1,16 @@
 {
+  "name":"instantor/PropsLoader",
+  "type":"library",
+  "description":"TODO: Properties loader",
+  "keywords":["properties","loader","props","propsloader"],
+  "homepage":"https://github.com/hperadin/PropsLoader",
+  "licence":"TODO:",
+  "authors":[
+    {
+      "name":"Hrvoje Peradin",
+      "email":"hrvoje@element.hr",
+      "role":"developer"
+    }],
   "require":{
     "monolog/monolog":"1.7.*"
   }
