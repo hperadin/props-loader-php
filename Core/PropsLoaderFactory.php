@@ -75,8 +75,12 @@ class PropsLoaderFactory {
     $propsResolver = new PropsLoaderImpl($this->logger, $this->propsHome, $file_path."/"."_");
 
     /* Eagerly try to resolve all dependencies, and fail early*/
-    foreach($propsResolver->getProperties() as $key => $value){
+    $dasProperties = $propsResolver->getProperties();
+    $this->logger->debug("Eagerly resolving all dependencies...");
+
+    foreach($dasProperties as $key => $value){
       try{
+        $this->logger->debug("Resolving dependencies for $key => $value");
         $isResolver = PropsLoaderImpl::isResolver($value);
         $this->logger->debug("Is resolver = $isResolver");
 
@@ -89,11 +93,12 @@ class PropsLoaderFactory {
           $this->logger->info("$key = ". $loadedProps->toPath());
         }
       }catch(Exception $ex){
+        $this -> logger -> error($ex);
         throw new RuntimeException("Could not resolve key '$key' with value "
             .$propsResolver->get($key)." from ".$propsResolver->toPath(), 0, $ex);
       }
-      $this->propertiesResolversCache[$projectBranch] = $propsResolver;
-      return $propsResolver;
     }
+    $this->propertiesResolversCache[$projectBranch] = $propsResolver;
+    return $propsResolver;
   }
 }

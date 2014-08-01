@@ -54,6 +54,7 @@ class PropsLoaderImpl implements PropsLoader {
         $this->resolverMap[$key] = $newLoader;
         return $newLoader;
       } catch (Exception $e) {
+        $this -> logger -> error($ex);
         throw new InvalidArgumentException("Could not resolve key '$key'!", 0, $e);
       }
   }
@@ -83,6 +84,7 @@ class PropsLoaderImpl implements PropsLoader {
       $this->resolveMap[$key] = $newLoader;
       return $newLoader;
     }catch (Exception $ex){
+      $this -> logger -> error($ex);
       throw new InvalidArgumentException("Could not resolve key '$key'!", 0, $ex);
     }
   }
@@ -95,7 +97,6 @@ class PropsLoaderImpl implements PropsLoader {
     /* In the current dir filter all files starting with $file_prefix */
     $parent_dir = dirname($file_path)."/";
     $file_prefix = basename($file_path);
-
     $files = array();
     foreach (scandir($parent_dir) as $fileInDir){
       if(startsWith($file_prefix, $fileInDir)){
@@ -141,6 +142,7 @@ class PropsLoaderImpl implements PropsLoader {
       $this-> logger -> debug("About to load file: ". $this->file_path."...");
       $this -> propertiesArray = $this->javaPropertiesReader->read();
     } catch (Exception $ex) {
+      $this -> logger -> error($ex);
       throw new InvalidArgumentException("An error occured while parsing properties from '$file_name'", 0, $ex);
     }
   }
