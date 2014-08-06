@@ -1,6 +1,6 @@
 <?php
 
-require_once 'Api/PropsResolver.php';
+require_once 'src/Api/PropsResolver.php';
 
 interface PropsLoader extends PropsResolver, Iterator {
 
@@ -10,7 +10,7 @@ interface PropsLoader extends PropsResolver, Iterator {
   public function getInt($key);
 
   /** Returns the properties' associative array */
-  public function getProperties();
+  public function toProperties();
 
   public function __toString();
   public function toString($encoding);

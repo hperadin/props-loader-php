@@ -2,10 +2,10 @@
 
 require_once 'vendor/autoload.php';
 
-require_once 'Core/PropsLoaderImpl.php';
-require_once 'Core/PropsLoaderFactory.php';
+require_once 'src/Core/PropsLoaderImpl.php';
+require_once 'src/Core/PropsLoaderFactory.php';
 
-require_once 'Util/utils.php';
+require_once 'src/Util/utils.php';
 
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
@@ -34,9 +34,12 @@ foreach ($projects as $project){
     print "======================================================\n";
     print "Loadin properties for project: $project\n";
     $propsLoader = $propsLoaderFactory -> loadPure($project);
+    print "Loaded props from file: " . $propsLoader->toPath()."\n";
+    var_dump($propsLoader->toProperties());
     print "======================================================\n";
   }catch(Exception $ex){
-    //just skip the project
+    //print $ex;
+    print "Skipping $project...\n";
   }
 
 }

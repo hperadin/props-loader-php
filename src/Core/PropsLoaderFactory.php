@@ -1,8 +1,8 @@
 <?php
 
-require_once 'Core/PropsLoaderImpl.php';
+require_once 'src/Core/PropsLoaderImpl.php';
 
-require_once 'Util/utils.php';
+require_once 'src/Util/utils.php';
 
 use Monolog\Logger;
 
@@ -36,11 +36,17 @@ class PropsLoaderFactory {
    * property from the environment.
    * */
   private function resolveProperty($key){
+    $this->logger->debug("Resolving the system property for: '$key'");
     $value = ini_get($key);
-    $this->logger->debug("Resolving system property $key, $value");
 
     if($value === FALSE){
-      throw new InvalidArgumentException("System property '$key' was undefined.");
+      $this->logger->debug("Nothing found in the system, trying to find '$key' in the environment variables.");
+      $value = getenv($key);
+      if($value === FALSE){
+        $message = "No property found for key '$key', nor in the system configuration, nor the environment";
+        $this->logger->error($message);
+        throw new InvalidArgumentException($message);
+      }
     }
 
     return $value;
@@ -60,9 +66,7 @@ class PropsLoaderFactory {
 
     $projectBranch = $projectName.":".$branch;
 
-    $cachedPropsResolver = isset($this->propertiesResolversCache[$projectBranch])
-      ?   $this->propertiesResolversCache[$projectBranch]
-      : null;
+    $cachedPropsResolver = valOrNull($this->propertiesResolversCache[$projectBranch]);
     if($cachedPropsResolver) return $cachedPropsResolver;
 
     if($branch !== null){
@@ -74,11 +78,8 @@ class PropsLoaderFactory {
     $this->logger->debug("Resolved path for _: $file_path");
     $propsResolver = new PropsLoaderImpl($this->logger, $this->propsHome, $file_path."/"."_");
 
-    /* Eagerly try to resolve all dependencies, and fail early*/
-    $dasProperties = $propsResolver->getProperties();
     $this->logger->debug("Eagerly resolving all dependencies...");
-
-    foreach($dasProperties as $key => $value){
+    foreach($propsResolver->toProperties() as $key => $value){
       try{
         $this->logger->debug("Resolving dependencies for $key => $value");
         $isResolver = PropsLoaderImpl::isResolver($value);
@@ -89,15 +90,16 @@ class PropsLoaderFactory {
           $this->logger->info("$key = ". $resolvedProps->toPath());
         }else{
           $loadedProps = $propsResolver->resolve($key);
-          $loadedProps->getProperties();
+          $loadedProps->toProperties();
           $this->logger->info("$key = ". $loadedProps->toPath());
         }
       }catch(Exception $ex){
-        $this -> logger -> error($ex);
+        $this->logger->error($ex);
         throw new RuntimeException("Could not resolve key '$key' with value "
             .$propsResolver->get($key)." from ".$propsResolver->toPath(), 0, $ex);
       }
     }
+    $this->logger->debug("Caching a resolver for $projectBranch");
     $this->propertiesResolversCache[$projectBranch] = $propsResolver;
     return $propsResolver;
   }

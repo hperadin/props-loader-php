@@ -1,17 +1,27 @@
 {
-  "name":"instantor/PropsLoader",
-  "type":"library",
-  "description":"TODO: Properties loader",
-  "keywords":["properties","loader","props","propsloader"],
-  "homepage":"https://github.com/hperadin/PropsLoader",
-  "licence":"TODO:",
-  "authors":[
-    {
-      "name":"Hrvoje Peradin",
-      "email":"hrvoje@element.hr",
-      "role":"developer"
-    }],
-  "require":{
-    "monolog/monolog":"1.7.*"
+  "name" : "instantor/props-loader-php",
+  "type" : "library",
+  "description" : "A PHP properties loader module",
+  "keywords" : [
+    "properties",
+    "loader",
+    "props",
+    "propsloader"
+  ],
+  "homepage" : "https://github.com/hperadin/props-loader-php",
+  "license" : "BSD-3-Clause",
+  "authors" : [{
+      "name" : "Hrvoje Peradin",
+      "email" : "hrvoje@element.hr",
+      "role" : "developer"
+    }
+  ],
+  "require" : {
+    "monolog/monolog" : "1.7.*"
+  },
+  "autoload" : {
+    "psr-0" : {
+      "PropsLoader" : "src/"
+    }
   }
 }

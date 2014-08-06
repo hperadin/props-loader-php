@@ -1,9 +1,9 @@
 <?php
 
-require_once 'Api/PropsLoader.php';
-require_once 'Core/JavaPropertiesReader.php';
+require_once 'src/Api/PropsLoader.php';
+require_once 'src/Core/JavaPropertiesReader.php';
 
-require_once 'Util/utils.php';
+require_once 'src/Util/utils.php';
 
 use Monolog\Logger;
 
@@ -22,11 +22,12 @@ class PropsLoaderImpl implements PropsLoader {
   public function __construct(Monolog\Logger $logger, $propsHome, $file_path){
     $this->logger = $logger;
     $this->propsHome = $propsHome;
-    $this->file_path = $this -> findSingleFile($file_path);
+    $this->file_path = $this->findSingleFile($file_path);
     $this->javaPropertiesReader = new JavaPropertiesReader($file_path);
   }
 
   const resolverPattern = "/^(.*)[\\/]_(\\.\\w+)?$/";
+  /** Returns whether the value matches the resolver filename pattern */
   public static function isResolver($value) {
     return preg_match(self::resolverPattern, $value) === 1;
   }
@@ -37,38 +38,35 @@ class PropsLoaderImpl implements PropsLoader {
           $this->resolverMap = array();
         }
 
-        $cachedResolver = isset($this->resolverMap[$key])
-          ? $this->resolverMap[$key]
-          : null;
+        $cachedResolver = valOrNull($this->resolverMap[$key]);
         if ($cachedResolver) return $cachedResolver;
 
         $value = $this->get($key);
         if (!$this->isResolver($value)) {
-          throw new InvalidArgumentException(
-              "Could not load resolver for key '$key', value '$value' is not in underscore main config format!");
+          $message = "Could not load resolver for key '$key', value '$value' is not in underscore main config format!";
+          $this->logger->error($message);
+          throw new InvalidArgumentException($message);
         }
 
         $resolvedFile = $this->findSingleFile($this->propsHome .'/'. $value);
 
         $newLoader = new PropsLoaderImpl($this->logger, $this->propsHome, $resolvedFile);
         $this->resolverMap[$key] = $newLoader;
+        $this->logger->debug("Created and cached a new resolver for key: '$key'");
         return $newLoader;
       } catch (Exception $e) {
-        $this -> logger -> error($ex);
+        $this->logger->error($ex);
         throw new InvalidArgumentException("Could not resolve key '$key'!", 0, $e);
       }
   }
 
-  /** Resolves a PropsLoader implementation */
   public function resolve($key) {
     try{
       if(!isset($this->resolveMap)){
         $this->resolveMap = array();
       }
 
-      $cachedLoader = isset($this->resolveMap[$key])
-        ? $this->resolveMap[$key]
-        : null;
+      $cachedLoader = valOrNull($this->resolveMap[$key]);
       if($cachedLoader) return $cachedLoader;
 
       $base_dir = dirname($this->file_path);
@@ -82,9 +80,10 @@ class PropsLoaderImpl implements PropsLoader {
 
       $newLoader = new PropsLoaderImpl($this->logger, $this->propsHome, $resolvedFile);
       $this->resolveMap[$key] = $newLoader;
+      $this->logger->debug("Created and cached a new loader for key: '$key'");
       return $newLoader;
     }catch (Exception $ex){
-      $this -> logger -> error($ex);
+      $this->logger->error($ex);
       throw new InvalidArgumentException("Could not resolve key '$key'!", 0, $ex);
     }
   }
@@ -120,10 +119,12 @@ class PropsLoaderImpl implements PropsLoader {
       throw new InvalidArgumentException("Key cannot be null");
     }
 
-    if(isset($this->getProperties()[$key])){
-      return $this->getProperties()[$key];
+    if(isset($this->toProperties()[$key])){
+      return $this->toProperties()[$key];
     }else{
-      throw new InvalidArgumentException("Key '$key' not found!");
+      $message = "Key '$key' not found!";
+      $this->logger->error($message);
+      throw new InvalidArgumentException($message);
     }
   }
 
@@ -133,29 +134,29 @@ class PropsLoaderImpl implements PropsLoader {
     if(is_int($value)){
       return intval($value);
     }else{
-      throw new InvalidArgumentException("Key '$key' with value '$value' cannot be cast to integer!");
+      $message = "Key '$key' with value '$value' cannot be cast to integer!";
+      $this->logger->error($message);
+      throw new InvalidArgumentException($message);
     }
   }
 
   private function loadProperties(){
     try{
-      $this-> logger -> debug("About to load file: ". $this->file_path."...");
-      $this -> propertiesArray = $this->javaPropertiesReader->read();
+      $this->logger->debug("About to load file: ". $this->file_path."...");
+      $this->propertiesArray = $this->javaPropertiesReader->read();
     } catch (Exception $ex) {
-      $this -> logger -> error($ex);
+      $this->logger->error($ex);
       throw new InvalidArgumentException("An error occured while parsing properties from '$file_name'", 0, $ex);
     }
   }
 
-  /** Returns the properties' associative array */
-  public function getProperties(){
+  public function toProperties(){
     if(!isset($this->propertiesArray)){
       $this->loadProperties();
     }
     return $this->propertiesArray;
   }
 
-  /** Returns the full path to the properties source file */
   public function toPath(){
     return $this->file_path;
   }

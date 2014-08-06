@@ -20,3 +20,11 @@ function getUserHome(){
     throw new Exception("Unable to retrieve the user home directory path.");
   }
 }
+
+function valOrNull(&$val){
+  if(isset($val)){
+    return $val;
+  }else{
+    return null;
+  }
+}
