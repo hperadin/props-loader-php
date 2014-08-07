@@ -1,10 +1,9 @@
 <?php
+namespace PropsLoader\Core;
 
-require_once 'src/Core/PropsLoaderImpl.php';
-
-require_once 'src/Util/utils.php';
-
-use Monolog\Logger;
+use \Monolog\Logger;
+use \PropsLoader\Core\PropsLoaderImpl;
+use \PropsLoader\Util\Utils;
 
 class PropsLoaderFactory {
 
@@ -13,19 +12,19 @@ class PropsLoaderFactory {
 
   private $propertiesResolversCache=array();
 
-  private function __construct(Monolog\Logger $logger){
+  private function __construct(\Monolog\Logger $logger){
     $this->logger = $logger;
     $this->propsHome = $this->resolvePropsHome();
   }
 
   /** Initialises and returns a new PropsLoaderFactory */
-  public static function init(Monolog\Logger $logger){
+  public static function init(\Monolog\Logger $logger){
     $logger->debug("Initializing PropsLoaderFactory ...");
     return new PropsLoaderFactory($logger);
   }
 
   private function resolvePropsHome() {
-    $userHome = getUserHome();
+    $userHome = Utils::getUserHome();
     return "$userHome/.props/";
   }
 
@@ -45,7 +44,7 @@ class PropsLoaderFactory {
       if($value === FALSE){
         $message = "No property found for key '$key', nor in the system configuration, nor the environment";
         $this->logger->error($message);
-        throw new InvalidArgumentException($message);
+        throw new \InvalidArgumentException($message);
       }
     }
 
@@ -66,7 +65,7 @@ class PropsLoaderFactory {
 
     $projectBranch = $projectName.":".$branch;
 
-    $cachedPropsResolver = valOrNull($this->propertiesResolversCache[$projectBranch]);
+    $cachedPropsResolver = Utils::valOrNull($this->propertiesResolversCache[$projectBranch]);
     if($cachedPropsResolver) return $cachedPropsResolver;
 
     if($branch !== null){
@@ -95,7 +94,7 @@ class PropsLoaderFactory {
         }
       }catch(Exception $ex){
         $this->logger->error($ex);
-        throw new RuntimeException("Could not resolve key '$key' with value "
+        throw new \RuntimeException("Could not resolve key '$key' with value "
             .$propsResolver->get($key)." from ".$propsResolver->toPath(), 0, $ex);
       }
     }

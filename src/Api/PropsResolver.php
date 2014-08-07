@@ -1,4 +1,6 @@
 <?php
+namespace PropsLoader\Api;
+
 interface PropsResolver {
 
   /** Load a PropsResolver by $key */

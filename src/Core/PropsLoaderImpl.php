@@ -1,13 +1,13 @@
 <?php
+namespace PropsLoader\Core;
 
-require_once 'src/Api/PropsLoader.php';
-require_once 'src/Core/JavaPropertiesReader.php';
+use \Monolog\Logger;
+use \PropsLoader\Api\PropsLoader;
+use \PropsLoader\Core\JavaPropertiesReader;
+use PropsLoader\Util\Utils;
 
-require_once 'src/Util/utils.php';
 
-use Monolog\Logger;
-
-class PropsLoaderImpl implements PropsLoader {
+class PropsLoaderImpl implements \PropsLoader\Api\PropsLoader {
   private $logger;
   private $propsHome;
   private $file_path;
@@ -19,7 +19,7 @@ class PropsLoaderImpl implements PropsLoader {
 
   private $propertiesArray;
 
-  public function __construct(Monolog\Logger $logger, $propsHome, $file_path){
+  public function __construct(\Monolog\Logger $logger, $propsHome, $file_path){
     $this->logger = $logger;
     $this->propsHome = $propsHome;
     $this->file_path = $this->findSingleFile($file_path);
@@ -38,14 +38,14 @@ class PropsLoaderImpl implements PropsLoader {
           $this->resolverMap = array();
         }
 
-        $cachedResolver = valOrNull($this->resolverMap[$key]);
+        $cachedResolver = Utils::valOrNull($this->resolverMap[$key]);
         if ($cachedResolver) return $cachedResolver;
 
         $value = $this->get($key);
         if (!$this->isResolver($value)) {
           $message = "Could not load resolver for key '$key', value '$value' is not in underscore main config format!";
           $this->logger->error($message);
-          throw new InvalidArgumentException($message);
+          throw new \InvalidArgumentException($message);
         }
 
         $resolvedFile = $this->findSingleFile($this->propsHome .'/'. $value);
@@ -56,7 +56,7 @@ class PropsLoaderImpl implements PropsLoader {
         return $newLoader;
       } catch (Exception $e) {
         $this->logger->error($ex);
-        throw new InvalidArgumentException("Could not resolve key '$key'!", 0, $e);
+        throw new \InvalidArgumentException("Could not resolve key '$key'!", 0, $e);
       }
   }
 
@@ -66,7 +66,7 @@ class PropsLoaderImpl implements PropsLoader {
         $this->resolveMap = array();
       }
 
-      $cachedLoader = valOrNull($this->resolveMap[$key]);
+      $cachedLoader = Utils::valOrNull($this->resolveMap[$key]);
       if($cachedLoader) return $cachedLoader;
 
       $base_dir = dirname($this->file_path);
@@ -84,7 +84,7 @@ class PropsLoaderImpl implements PropsLoader {
       return $newLoader;
     }catch (Exception $ex){
       $this->logger->error($ex);
-      throw new InvalidArgumentException("Could not resolve key '$key'!", 0, $ex);
+      throw new \InvalidArgumentException("Could not resolve key '$key'!", 0, $ex);
     }
   }
 
@@ -98,25 +98,25 @@ class PropsLoaderImpl implements PropsLoader {
     $file_prefix = basename($file_path);
     $files = array();
     foreach (scandir($parent_dir) as $fileInDir){
-      if(startsWith($file_prefix, $fileInDir)){
+      if(Utils::startsWith($file_prefix, $fileInDir)){
         $files[]=$fileInDir;
       }
     }
 
     switch (count($files)){
       case 0:
-        throw new InvalidArgumentException("File with prefix '$file_prefix' not found in directory: '$parent_dir'!");
+        throw new \InvalidArgumentException("File with prefix '$file_prefix' not found in directory: '$parent_dir'!");
       case 1:
         return $parent_dir.$files[0];
       default:
-        throw new InvalidArgumentException("Ambiguous resolution, more than one file with prefix '$file_prefix' was found in directory: '$parent_dir'!");
+        throw new \InvalidArgumentException("Ambiguous resolution, more than one file with prefix '$file_prefix' was found in directory: '$parent_dir'!");
     }
   }
 
   /** Gets the String value of a property */
   public function get($key){
     if($key === null){
-      throw new InvalidArgumentException("Key cannot be null");
+      throw new \InvalidArgumentException("Key cannot be null");
     }
 
     if(isset($this->toProperties()[$key])){
@@ -124,7 +124,7 @@ class PropsLoaderImpl implements PropsLoader {
     }else{
       $message = "Key '$key' not found!";
       $this->logger->error($message);
-      throw new InvalidArgumentException($message);
+      throw new \InvalidArgumentException($message);
     }
   }
 
@@ -136,7 +136,7 @@ class PropsLoaderImpl implements PropsLoader {
     }else{
       $message = "Key '$key' with value '$value' cannot be cast to integer!";
       $this->logger->error($message);
-      throw new InvalidArgumentException($message);
+      throw new \InvalidArgumentException($message);
     }
   }
 
@@ -146,7 +146,7 @@ class PropsLoaderImpl implements PropsLoader {
       $this->propertiesArray = $this->javaPropertiesReader->read();
     } catch (Exception $ex) {
       $this->logger->error($ex);
-      throw new InvalidArgumentException("An error occured while parsing properties from '$file_name'", 0, $ex);
+      throw new \InvalidArgumentException("An error occured while parsing properties from '$file_name'", 0, $ex);
     }
   }
 

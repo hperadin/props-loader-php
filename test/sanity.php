@@ -2,13 +2,12 @@
 
 require_once 'vendor/autoload.php';
 
-require_once 'src/Core/PropsLoaderImpl.php';
-require_once 'src/Core/PropsLoaderFactory.php';
-
-require_once 'src/Util/utils.php';
-
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
+
+use PropsLoader\Core\PropsLoaderImpl;
+use PropsLoader\Core\PropsLoaderFactory;
+use PropsLoader\Util\Utils;
 
 function initLogger(){
   $logger = new Logger("PropsLoaderPhpTestLogger");
@@ -26,7 +25,7 @@ $logger = initLogger();
 
 $propsLoaderFactory = PropsLoaderFactory::init($logger);
 
-$propertiesHomeDir = getUserHome() . "/.props/";
+$propertiesHomeDir = Utils::getUserHome() . "/.props/";
 $projects = scandir($propertiesHomeDir);
 
 foreach ($projects as $project){

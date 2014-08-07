@@ -1,4 +1,6 @@
 <?php
+namespace PropsLoader\Core;
+
 /**
 * A reader compatible with java.util.Properties, as per specification:
 * @link http://docs.oracle.com/javase/7/docs/api/java/util/Properties.html#load%28java.io.Reader%29

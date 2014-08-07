@@ -20,8 +20,8 @@
     "monolog/monolog" : "1.7.*"
   },
   "autoload" : {
-    "psr-0" : {
-      "PropsLoader" : "src/"
+    "psr-4" : {
+      "PropsLoader\\" : "src/"
     }
   }
 }

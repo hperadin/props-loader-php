@@ -1,8 +1,8 @@
 <?php
 
-require_once 'src/Api/PropsResolver.php';
+namespace PropsLoader\Api;
 
-interface PropsLoader extends PropsResolver, Iterator {
+interface PropsLoader extends \PropsLoader\Api\PropsResolver, \Iterator {
 
   /** Gets the String value of a property */
   public function get($key);
